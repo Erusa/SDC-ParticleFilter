@@ -297,11 +297,7 @@ void ParticleFilter::actualizeParticles(){
   int ParticleID;
   for(int i=0; i<num_particles; ++i){
     ParticleID = weights[i];
-  	oneParticle.x = particles[ParticleID].x;
-    oneParticle.y = particles[ParticleID].y;
-    oneParticle.theta = particles[ParticleID].theta;
-    oneParticle.weight = particles[ParticleID].weight;
-    oneParticle.id =  i;
+  	oneParticle = particles[ParticleID];
     newParticles.push_back(oneParticle);
     //std::cout << "Init Particle" <<i<< ":" << particles[i].x << " " << particles[i].y<< " " << particles[i].theta << std::endl;
   }
