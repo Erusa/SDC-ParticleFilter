@@ -79,15 +79,30 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
   	static normal_distribution<double> dist_y(0, std_pos[1]);
   	static normal_distribution<double> dist_theta(0, std_pos[2]);
   
+  //std::cout << "Prediction Particle 10 " << particles[10].x << " " << particles[10].y<< " " << particles[10].theta << std::endl;
+  
   	double x_new, y_new, theta_new;
+    
 	for(int i = 0; i<num_particles; ++i){
+      
+      if (fabs(yaw_rate) > 1.0e-5){
     	x_new = particles[i].x + (velocity/yaw_rate)*(sin(particles[i].theta+yaw_rate*delta_t) - sin(particles[i].theta)); 
       	x_new += dist_x(gen);
       	particles[i].x =  x_new;
       
     	y_new = particles[i].y + (velocity/yaw_rate)*(-cos(particles[i].theta+yaw_rate*delta_t) + cos(particles[i].theta));
         y_new += dist_y(gen);
+      	particles[i].y =  y_new;}
+      
+      else{
+      	x_new = particles[i].x + (velocity)*delta_t*cos(particles[i].theta); 
+      	x_new += dist_x(gen);
+      	particles[i].x =  x_new;
+      
+    	y_new = particles[i].y + (velocity)*delta_t*sin(particles[i].theta);
+        y_new += dist_y(gen);
       	particles[i].y =  y_new;
+      }
       
      	theta_new = particles[i].theta + yaw_rate*delta_t + dist_theta(gen);
       	particles[i].theta = theta_new;
@@ -116,16 +131,24 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   
   vector<LandmarkObs> predictedLandmarks;
   vector<LandmarkObs> observedLandmarks;
+  
+  if(observations.size() == 0) {LOG("NO OBSERVATIONS!");}
+  
   for(int i = 0; i < num_particles; ++i){
+    
     //LOG(i);
+    // std::cout<<"particle: "<< particles[i].x << ", " <<particles[i].y << std::endl;
     //LOG("predicted Landmarks");
   	predictedLandmarks = getRelevantLandmarks(map_landmarks, sensor_range, particles[i]);
+    if(predictedLandmarks.size() == 0) {
+      LOG("NO PREDICTIONS!!!!!");}
     //LOGLandmarkObsIDs(predictedLandmarks);
     
     //LOG("observed Landmarks");
     observedLandmarks = HomogenousTransformation(observations, particles[i]); //from Car to Map Coordinates
     dataAssociation(predictedLandmarks, observedLandmarks);
     CompleteSetAssociation(particles[i], observedLandmarks);
+   
     //LOGLandmarkObsIDs(observedLandmarks);
     //std::cout<<"association from outside id "<< particles[i].associations[0] <<std::endl;
     //std::cout<<"association from outside x  "<< particles[i].sense_x[0] <<std::endl;
@@ -208,7 +231,7 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
     observations[i].id = nearstID;
     //std::cout<<"obs_id from" <<i<<": "<< observations[i].id;
   } 
-  //std::cout<<std::endl;
+  //std::cout<<std::endl; 
 }
 
 void ParticleFilter::updateWeight(const Map &map_landmarks, const vector<LandmarkObs>& observedLandmarks, Particle &oneParticle, const double std_landmark[]){
@@ -231,6 +254,10 @@ void ParticleFilter::normalization(){
   for(int i = 0; i<num_particles; ++i){
     	sum +=  particles[i].weight;
     }
+  
+  if (sum==0) {std::cout<<"Division by Zero"<<std::endl;
+              return;
+              } 
   for(int i = 0; i<num_particles; ++i){
     	particles[i].weight =  particles[i].weight / sum;
     }
@@ -249,6 +276,7 @@ void ParticleFilter::resample() {
   vector<int> particlesProbabilities;
   particlesProbabilities.reserve(num_particles);
   setParticlesProbabilities(particlesProbabilities); // here discrete distribution is set using particles[i].weight TODO!!!!!
+  if(particlesProbabilities.size() == 0) {LOG("NO DISTRIBUTION!");}
   std::discrete_distribution<int> distribution(particlesProbabilities.begin(), particlesProbabilities.end());
   
   for(int i =0; i<num_particles; ++i){
