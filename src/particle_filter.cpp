@@ -17,9 +17,7 @@
 #include <vector>
 
 #include "helper_functions.h"
-//#include "debugger_functions.h"
-//#include "helper_functions.h"
-//#include "multiv_gauss.h"
+
 using std::string;
 using std::vector;
 using std::normal_distribution;
@@ -56,7 +54,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     	oneParticle.weight = 1;
    		oneParticle.id =  i;
     	particles.push_back(oneParticle);
-    //std::cout << "Init Particle" <<i<< ":" << particles[i].x << " " << particles[i].y<< " " << particles[i].theta << std::endl;
+
   		}
 	
   	is_initialized= 1;
@@ -79,7 +77,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
   	static normal_distribution<double> dist_y(0, std_pos[1]);
   	static normal_distribution<double> dist_theta(0, std_pos[2]);
   
-  //std::cout << "Prediction Particle 10 " << particles[10].x << " " << particles[10].y<< " " << particles[10].theta << std::endl;
   
   	double x_new, y_new, theta_new;
     
@@ -107,7 +104,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
      	theta_new = particles[i].theta + yaw_rate*delta_t + dist_theta(gen);
       	particles[i].theta = theta_new;
     }
-    //std::cout << "Prediction Particle 10 " << particles[10].x << " " << particles[10].y<< " " << particles[10].theta << std::endl;
 }
 
 /***************************************************************************************************************/
@@ -136,43 +132,26 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   
   for(int i = 0; i < num_particles; ++i){
     
-    //LOG(i);
-    // std::cout<<"particle: "<< particles[i].x << ", " <<particles[i].y << std::endl;
-    //LOG("predicted Landmarks");
   	predictedLandmarks = getRelevantLandmarks(map_landmarks, sensor_range, particles[i]);
-    if(predictedLandmarks.size() == 0) {
-      LOG("NO PREDICTIONS!!!!!");}
-    //LOGLandmarkObsIDs(predictedLandmarks);
+    if(predictedLandmarks.size() == 0) {LOG("NO PREDICTIONS!!!!!");}
     
-    //LOG("observed Landmarks");
     observedLandmarks = HomogenousTransformation(observations, particles[i]); //from Car to Map Coordinates
     dataAssociation(predictedLandmarks, observedLandmarks);
     CompleteSetAssociation(particles[i], observedLandmarks);
-   
-    //LOGLandmarkObsIDs(observedLandmarks);
-    //std::cout<<"association from outside id "<< particles[i].associations[0] <<std::endl;
-    //std::cout<<"association from outside x  "<< particles[i].sense_x[0] <<std::endl;
-    //std::cout<<"association from outside y "<< particles[i].sense_y[0] <<std::endl;
-    //LOG("Updates Weight");
     updateWeight(map_landmarks, observedLandmarks, particles[i], std_landmark);
-    //std::cout<<"total weight from hfunction"<< particles[i].weight <<std::endl;
   }
-  //LOG("Normalization");
   normalization(); 
-  //LOG10ParticlesWeights();
 }
 
 vector<LandmarkObs>  ParticleFilter::getRelevantLandmarks(const Map &map_landmarks, const double& sensor_range, const Particle& oneParticle) {
 	vector<LandmarkObs> predictedLandmarks;
   	LandmarkObs predictedLandmark;
   	double distance;
-   //LOG(map_landmarks.landmark_list.size());
+  
   	for(unsigned int i = 0; i<map_landmarks.landmark_list.size(); ++i ){
     	distance = dist(oneParticle.x, oneParticle.y, map_landmarks.landmark_list[i].x_f, map_landmarks.landmark_list[i].y_f);
       	if (distance < sensor_range){
           predictedLandmark.x = map_landmarks.landmark_list[i].x_f;
-          //LOG("predictedLandmark.x");
-          //LOG( predictedLandmark.x);
           predictedLandmark.y = map_landmarks.landmark_list[i].y_f;
           predictedLandmark.id =  map_landmarks.landmark_list[i].id_i;  // assumption: id_i = i
           predictedLandmarks.push_back(predictedLandmark);
@@ -188,14 +167,11 @@ vector<LandmarkObs> ParticleFilter::HomogenousTransformation(const vector<Landma
   LandmarkObs observationPoint;
   
   for(unsigned int i = 0; i<observationsInCarCoordinates.size(); ++i){
-          observationPoint.x = particleInMapCoordinates.x + cos(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].x - sin(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].y;
-          observationPoint.y = particleInMapCoordinates.y + sin(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].x + cos(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].y;                               observationsInMapCoordinates.push_back(observationPoint); 
-              //LOG("observationPoint.x");
-              //LOG(observationPoint.x);
+    observationPoint.x = particleInMapCoordinates.x + cos(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].x - sin(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].y;
+    observationPoint.y = particleInMapCoordinates.y + sin(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].x + cos(particleInMapCoordinates.theta)*observationsInCarCoordinates[i].y;         observationsInMapCoordinates.push_back(observationPoint); 
         }                                                                                 
-  
   return  observationsInMapCoordinates;              
-  }
+}
 
 void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted, 
                                      vector<LandmarkObs>& observations) {
@@ -229,9 +205,7 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
         }    
     }
     observations[i].id = nearstID;
-    //std::cout<<"obs_id from" <<i<<": "<< observations[i].id;
   } 
-  //std::cout<<std::endl; 
 }
 
 void ParticleFilter::updateWeight(const Map &map_landmarks, const vector<LandmarkObs>& observedLandmarks, Particle &oneParticle, const double std_landmark[]){
@@ -244,9 +218,7 @@ void ParticleFilter::updateWeight(const Map &map_landmarks, const vector<Landmar
      predicted_x = map_landmarks.landmark_list[landMarkID].x_f; 
      predicted_y = map_landmarks.landmark_list[landMarkID].y_f; 
   	 oneParticle.weight *= multiv_prob(std_landmark[0], std_landmark[1], observedLandmarks[i].x, observedLandmarks[i].y, predicted_x, predicted_y);
-     //std::cout<< "weight "<< i<<": "<< oneParticle.weight<<"--> p_x: "<<predicted_x << " p_y: "<<predicted_y << " o_x: "<< observedLandmarks[i].x << " o_y: " <<observedLandmarks[i].y << std::endl;
   }
-     //std::cout<< "total weight "<< ": "<< oneParticle.weight<<std::endl;
 }
 
 void ParticleFilter::normalization(){
@@ -272,7 +244,6 @@ void ParticleFilter::resample() {
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
   std::default_random_engine generator;
-  //LOG("Resample");
   vector<int> particlesProbabilities;
   particlesProbabilities.reserve(num_particles);
   setParticlesProbabilities(particlesProbabilities); // here discrete distribution is set using particles[i].weight TODO!!!!!
@@ -281,9 +252,7 @@ void ParticleFilter::resample() {
   
   for(int i =0; i<num_particles; ++i){
     int random_ID = distribution(generator); // here one particule is randomly choseen
-     //std::cout<< "old weight "<< i<<": "<< weights[i]<<std::endl;
   	weights[i] = random_ID;
-    //std::cout<< "weight "<< i<<": "<< weights[i]<<std::endl;
   }
 
   actualizeParticles(); // aqui se rescriba nuevas particulas donde varias se duplican
@@ -299,7 +268,6 @@ void ParticleFilter::actualizeParticles(){
     ParticleID = weights[i];
   	oneParticle = particles[ParticleID];
     newParticles.push_back(oneParticle);
-    //std::cout << "Init Particle" <<i<< ":" << particles[i].x << " " << particles[i].y<< " " << particles[i].theta << std::endl;
   }
 	
   particles = newParticles;
@@ -331,11 +299,9 @@ void ParticleFilter::CompleteSetAssociation(Particle& particle, const vector<Lan
   	sense_x.push_back(observedLandmarks[i].x);
     sense_y.push_back(observedLandmarks[i].y);
     associations.push_back(observedLandmarks[i].id);
-    //std::cout<<"asc_id" <<i<<": "<< associations[i];
   }
   
   SetAssociations(particle, associations, sense_x, sense_y);
-   //std::cout<<std::endl;
 }
 
 

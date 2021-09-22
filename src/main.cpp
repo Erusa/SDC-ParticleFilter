@@ -100,14 +100,12 @@ int main() {
           std::istream_iterator<float>(),
           std::back_inserter(y_sense));
 
-          //std::cout << "One Cycle"<<std::endl;
-          for (unsigned int i = 0; i < x_sense.size(); ++i) {
+           for (unsigned int i = 0; i < x_sense.size(); ++i) {
             LandmarkObs obs;
             obs.x = x_sense[i];
             obs.y = y_sense[i];
             noisy_observations.push_back(obs);
             //obs.id is for all cero here
-            //std::cout<<obs.x <<" , " <<obs.y<<std::endl;
           }
 
           // Update the weights and resample
