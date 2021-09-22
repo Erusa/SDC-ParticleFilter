@@ -255,7 +255,7 @@ void ParticleFilter::resample() {
   	weights[i] = random_ID;
   }
 
-  actualizeParticles(); // aqui se rescriba nuevas particulas donde varias se duplican
+  actualizeParticles();
 }
 
 void ParticleFilter::actualizeParticles(){
